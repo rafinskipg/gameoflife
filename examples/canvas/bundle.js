@@ -244,10 +244,7 @@ function addCell(e){
     y: e.pageY - canvasPosition.y
   }
   cellPos = pickNumberOfCell(mouse.x, mouse.y);
-  console.log('Change state of', cellPos);
-  console.log('Change state of', app.getCells()[cellPos]);
   app.changeState(app.getCells(), cellPos);
-  console.log('Change state of', app.getCells()[cellPos]);
 }
 
 function pickNumberOfCell(x,y){
