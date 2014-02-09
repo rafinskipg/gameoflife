@@ -10,6 +10,8 @@ Variation
 The following implementation is board-agnostic. It means that cells are not expected to be in a bidimensional array. 
 Cells are related with a "neighbour" relationship that can be used to generate bidimensional or tridimensional relationships.
 
+![image-cells](https://github.com/rafinskipg/gameoflife/blob/master/static/cells.png)
+
 This provides the ability to use this code to generate WebGl simulations of the Conway's Game of Life, wich is one of the purposes of this experiment.
 
 This code has been tested with mocha and chai, but it may suffer furder variation.
