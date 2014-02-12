@@ -1,5 +1,21 @@
+Object.prototype.extend = function(x) {
+  var props = Object.keys(x);
+  var that = this;
+  props.map(function(prop){
+    that[prop] = x[prop]
+  })
+};
+
 var numberOfCells = 2,
     _cells = [];
+
+var Cell = function Cell(){
+  this.state = 0;
+  this.neighbours = [];
+}
+
+
+
 
 function setNumberOfCells(number){
   if(number){
@@ -10,7 +26,7 @@ function setNumberOfCells(number){
 function init(){
   _cells = [];
   for(var i = 0; i<numberOfCells; i++){
-    _cells.push({ state: 0, neighbours: [] });
+    _cells.push(new Cell());
   }
 }
 
@@ -23,9 +39,11 @@ function isAlive(cell){
 }
 
 function changeState(cells,index){
-  //cells = cells.concat([]);
   var value = cells[index].state  ? 0 : 1;
   cells[index].state = value;
+  if(cells[index].changeState){
+    cells[index].changeState.call(cells[index]);
+  }
   return cells;
 }
 function createRelationOfNeighbours(neighbours){
@@ -92,6 +110,16 @@ function getAliveNeighbours(cell){
   return ammount;
 }
 
+//Custom properties
+function setCustomProperties(props){
+  Cell.prototype.extend(props);
+}
+
+function setCallbackState(cb){
+  Cell.prototype.extend({changeState: cb});
+}
+
+//Grid implementation
 function createGrid(numberXCells, numberYCells){
   var numberOfCells = numberXCells * numberYCells,
       cells;
@@ -120,9 +148,9 @@ function createGrid(numberXCells, numberYCells){
 
 function calculateGridNeighbours(x,y,grid){
   minX = x-1 >= 0 ? x-1: 0;
-  maxX = x+1 < grid[y].length ? x+1: x ;
+  maxX = x+1 < grid.length ? x+1: x ;
   minY = y-1 >= 0 ? y-1: 0;
-  maxY = y+1 < grid.length ? y+1: y ;
+  maxY = y+1 < grid[x].length ? y+1: y ;
   for(var i = minX; i<= maxX; i++){
     for(var j = minY; j<= maxY; j++){
       if(i != x || j != y){
@@ -140,5 +168,7 @@ module.exports = {
   changeState: changeState,
   step: step,
   createRelationOfNeighbours: createRelationOfNeighbours,
-  createGrid: createGrid
+  createGrid: createGrid,
+  setCustomProperties: setCustomProperties,
+  setCallbackState : setCallbackState
 }

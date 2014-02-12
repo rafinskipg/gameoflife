@@ -1,6 +1,22 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+Object.prototype.extend = function(x) {
+  var props = Object.keys(x);
+  var that = this;
+  props.map(function(prop){
+    that[prop] = x[prop]
+  })
+};
+
 var numberOfCells = 2,
     _cells = [];
+
+var Cell = function Cell(){
+  this.state = 0;
+  this.neighbours = [];
+}
+
+
+
 
 function setNumberOfCells(number){
   if(number){
@@ -11,7 +27,7 @@ function setNumberOfCells(number){
 function init(){
   _cells = [];
   for(var i = 0; i<numberOfCells; i++){
-    _cells.push({ state: 0, neighbours: [] });
+    _cells.push(new Cell());
   }
 }
 
@@ -24,9 +40,11 @@ function isAlive(cell){
 }
 
 function changeState(cells,index){
-  //cells = cells.concat([]);
   var value = cells[index].state  ? 0 : 1;
   cells[index].state = value;
+  if(cells[index].changeState){
+    cells[index].changeState.call(cells[index]);
+  }
   return cells;
 }
 function createRelationOfNeighbours(neighbours){
@@ -93,6 +111,16 @@ function getAliveNeighbours(cell){
   return ammount;
 }
 
+//Custom properties
+function setCustomProperties(props){
+  Cell.prototype.extend(props);
+}
+
+function setCallbackState(cb){
+  Cell.prototype.extend({changeState: cb});
+}
+
+//Grid implementation
 function createGrid(numberXCells, numberYCells){
   var numberOfCells = numberXCells * numberYCells,
       cells;
@@ -121,9 +149,9 @@ function createGrid(numberXCells, numberYCells){
 
 function calculateGridNeighbours(x,y,grid){
   minX = x-1 >= 0 ? x-1: 0;
-  maxX = x+1 < grid[y].length ? x+1: x ;
+  maxX = x+1 < grid.length ? x+1: x ;
   minY = y-1 >= 0 ? y-1: 0;
-  maxY = y+1 < grid.length ? y+1: y ;
+  maxY = y+1 < grid[x].length ? y+1: y ;
   for(var i = minX; i<= maxX; i++){
     for(var j = minY; j<= maxY; j++){
       if(i != x || j != y){
@@ -141,7 +169,9 @@ module.exports = {
   changeState: changeState,
   step: step,
   createRelationOfNeighbours: createRelationOfNeighbours,
-  createGrid: createGrid
+  createGrid: createGrid,
+  setCustomProperties: setCustomProperties,
+  setCallbackState : setCallbackState
 }
 },{}],2:[function(require,module,exports){
 var app = require('../../app.js'),
@@ -149,10 +179,11 @@ var app = require('../../app.js'),
     ctx,
     lastTime,
     cellSize = 20,
-    numberRows = 50,
-    numberColumns = 50,
+    numberRows,
+    numberColumns,
     aliveColor = 'black',
     deadColor = 'white',
+    unvisitedColor = 'blue',
     grid,
     button,
     started = false;
@@ -197,7 +228,7 @@ function render(){
   for(var i = 0; i < grid.length; i++){
     for(var j = 0; j < grid[i].length; j++){
       cell = cells[grid[i][j]];
-      color = app.isAlive(cell) ? aliveColor: deadColor;
+      color = app.isAlive(cell) ? aliveColor: (cell.visited ? deadColor: unvisitedColor);
       drawCell(i*cellSize, j*cellSize, color);
     }
   }
@@ -219,17 +250,43 @@ function drawNumber(x,y,number){
 }
 
 function initialize(){
-   // Create the canvas
-    canvas = document.getElementById("canvas");
-    ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    canvas.addEventListener("click", addCell, false);
-    grid = app.createGrid(numberRows,numberColumns);
+   
+    initCanvas();
+    createGridOfCells();
+    addCustomPropertiesToCells();
+
     button = document.getElementById("start_pause");
     button.addEventListener("click", start, false);
     lastTime = Date.now();
+    
     main();
+}
+
+function addCustomPropertiesToCells(){
+  app.setCustomProperties({
+    visited : false
+  })
+  app.setCallbackState(function(){
+    if(!this.visited){
+      this.visited = true;  
+    }
+  })
+}
+
+function initCanvas(){
+  // Create the canvas
+  canvas = document.getElementById("canvas");
+  ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth - canvas.offsetLeft - 50;
+  canvas.height = window.innerHeight;
+  canvas.addEventListener("click", addCell, false);
+}
+
+function createGridOfCells(){
+  numberRows = Math.floor((window.innerHeight -  canvas.offsetTop) / cellSize);
+  numberColumns = Math.floor((window.innerWidth - canvas.offsetLeft) / cellSize);
+  grid = app.createGrid(numberColumns,numberRows);
+
 }
 
 function addCell(e){

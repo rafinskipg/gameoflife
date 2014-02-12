@@ -139,14 +139,43 @@ describe('The game of life', function(){
     })
    
   });
-
- 
-  
 });
 
+describe('Custom properties / callbacks', function(){
+  var cells;
+    beforeEach(function(){
+      app.setNumberOfCells(6);
+      app.setCustomProperties({
+        customProperty : '3'
+      })
+      
+      app.init();
+      app.createRelationOfNeighbours([0,1,2,3,4,5]);
+      cells = app.getCells();
+      [0,1,3].map(function(item){
+         cells = app.changeState(cells, item);
+      })
+      app.setCallbackState(function(){
+        if(app.isAlive(this)){
+          this.customProperty = '2';  
+        }
+      })
+
+    })
+    it('2,5,4 should live', function(){
+      app.step();
+      expect(cells[2].customProperty).to.be.equals('2');
+      expect(cells[5].customProperty).to.be.equals('2');
+      expect(cells[4].customProperty).to.be.equals('2'); 
+      expect(cells[0].customProperty).to.be.equals('3');
+      expect(cells[1].customProperty).to.be.equals('3');
+      expect(cells[3].customProperty).to.be.equals('3');
+
+    })
+})
 
 describe('The grid creator', function(){
- describe('Implementation of the grid, 2x2', function(){
+ describe('Implementation of the grid, 3x3', function(){
     beforeEach(function(){
       app.createGrid(3,3);
     })
@@ -182,6 +211,41 @@ describe('The grid creator', function(){
     })
     it('should have 7 with neighbours 3,4,5,6,8', function(){
       var expected = [3,4,5,6,8];
+      app.getCells()[7].neighbours.map(function(item,index){
+        expect(item).to.be.equals(expected[index]);
+      })
+    })
+  })
+
+  describe('Implementation of the grid, 3x5', function(){
+    beforeEach(function(){
+      app.createGrid(3,5);
+    })
+    /*
+      0  1  2  3  4
+      5  6  7  8  9
+      10 11 12 13 14
+
+
+     0=> [ 1, 5, 6 ]
+
+     */
+    it('should have 0 with neighbours 1, 5, 6', function(){
+      var expected = [1, 5, 6];
+      app.getCells()[0].neighbours.map(function(item,index){
+        expect(item).to.be.equals(expected[index]);
+      })
+     
+    })
+    it('should have 4 with neighbours 3,8,9',function(){
+      var expected = [3,8,9];
+
+      app.getCells()[4].neighbours.map(function(item,index){
+        expect(item).to.be.equals(expected[index]);
+      })
+    })
+    it('should have 7 with neighbours 1,2,3,6,8,11,12,13', function(){
+      var expected = [1,2,3,6,8,11,12,13];
       app.getCells()[7].neighbours.map(function(item,index){
         expect(item).to.be.equals(expected[index]);
       })
